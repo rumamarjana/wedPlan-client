@@ -5,7 +5,7 @@ import Link from "next/link"
 import { AuthCard } from "@/components/auth/auth-card"
 import { SignInForm } from "@/components/auth/sign-in-form"
 import { authClient } from "@/lib/auth-client";
-
+import {useRouter} from "next/navigation"
 // export const metadata = {
 //   title: "Sign In — WedPlan",
 //   description: "Sign in to your WedPlan account.",
@@ -17,7 +17,7 @@ export type SignInData = {
 
 export default function SignInPage() {
 
-
+const router = useRouter();
   const handleSignIn = async (data: SignInData) => {
     const { data: signInResponse, error } = await authClient.signIn.email({
       email: data.email,
@@ -30,6 +30,9 @@ export default function SignInPage() {
       return
     }
     console.log("Sign in response:", signInResponse);
+     if(!error){
+      router.push("/");
+    }
   }
 
 

@@ -6,7 +6,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form"
 import { authClient } from "@/lib/auth-client"
 import { isUserRole, UserRole } from "@/lib/roles"
 // import { cookieNameRegex } from "better-auth/cookies"
-
+import {useRouter} from "next/navigation"
 export type SignUpData = {
   fullName: string
   email: string
@@ -21,7 +21,7 @@ export type SignUpData = {
 // }
 
 export default function SignUpPage() {
-
+const router = useRouter();
   const handleSignUp = async (data: SignUpData)  => {
 
       // console.log("Received form data:", data)
@@ -38,6 +38,9 @@ export default function SignUpPage() {
       return
     }
     console.log("Sign up response:", signUpResponse);
+    if(!error){
+      router.push("/");
+    }
   }
 
 
