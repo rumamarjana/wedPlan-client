@@ -6,12 +6,23 @@ import { GoogleButton } from "@/components/auth/google-button"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SignInData } from "@/app/(auth)/sign-in/page"
 
-export function SignInForm() {
+type SignInFormProps = {
+  onSignIn: (data: SignInData) => Promise<void>
+}
+
+
+
+export function SignInForm({onSubmit }: SignInFormProps) {
   // TODO: integrate real sign-in later — for now just collect the form data.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const data = Object.fromEntries(new FormData(event.currentTarget))
+      const data = Object.fromEntries(
+         new FormData(event.currentTarget)
+       ) as unknown as SignInData
+   
+       onSubmit(data)
     console.log("Sign in form data:", data)
   }
 

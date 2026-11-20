@@ -11,15 +11,16 @@ type SignUpFormProps = {
   onSubmit: (data: SignUpData) => void
 }
 
-export function SignUpForm({onSubmit }: SignUpFormProps) {
+export function SignUpForm({ onSubmit }: SignUpFormProps) {
   // TODO: integrate real sign-up later — for now just collect the form data.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-const data = Object.fromEntries(
-    new FormData(event.currentTarget)
-  ) as unknown as SignUpData
+    
+    const data = Object.fromEntries(
+      new FormData(event.currentTarget)
+    ) as unknown as SignUpData
 
-  onSubmit(data)
+    onSubmit(data)
     console.log("Sign up form data:", data)
   }
 
