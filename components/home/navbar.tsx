@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {  HeartIcon, MenuIcon } from "lucide-react"
+import { HeartIcon, MenuIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -15,12 +15,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+import { authClient } from "@/lib/auth-client"
 
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Browse Services", href: "/browse-services" },
-  { label: "Sign In", href: "/sign-in" },
-  { label: "Sign Up", href: "/sign-up" },
 ]
 
 function Logo({ className }: { className?: string }) {
@@ -68,7 +67,11 @@ function NavLink({
 
 
 export function Navbar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
+
+  const { data: session } = authClient.useSession();
+  console.log('user session ', session);
+
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -87,7 +90,36 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-         
+          <div className="hidden items-center gap-2 lg:flex">
+
+            {session?.user ? (
+              <>
+                <span className="text-sm font-medium text-foreground/80">
+                  Welcome, {session.user.name}
+                </span>
+
+                <Button
+                  variant="outline"
+                  onClick={() => authClient.signOut()}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  render={<Link href="/sign-in" />}
+                >
+                  Sign In
+                </Button>
+
+                <Button render={<Link href="/sign-up" />}>
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
 
           <Sheet>
             <SheetTrigger
@@ -129,9 +161,35 @@ export function Navbar() {
                     {link.label}
                   </SheetClose>
                 ))}
-              </nav>
 
-             
+                <div className="mt-3 flex flex-col gap-2 border-t pt-4">
+                  <SheetClose
+                    render={
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        render={<Link href="/sign-in" />}
+                      />
+                    }
+                  >
+                    Sign In
+                  </SheetClose>
+                  <SheetClose
+                    render={
+                      <Button
+                        className="w-full"
+                        render={<Link href="/sign-up" />}
+                      />
+                    }
+                  >
+                    Sign Up
+                  </SheetClose>
+
+
+
+
+                </div>
+              </nav>
             </SheetContent>
           </Sheet>
         </div>
