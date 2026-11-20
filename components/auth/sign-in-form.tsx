@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { SignInData } from "@/app/(auth)/sign-in/page"
 
 type SignInFormProps = {
-  onSignIn: (data: SignInData) => Promise<void>
+  onSubmit: (data: SignInData) => Promise<void>
 }
 
 

@@ -13,7 +13,10 @@ export const auth = betterAuth({
        additionalFields: {
           role: {
               type: ['admin','customer','vendor'],
-              input: false
+              // allow the client to send the role during sign-up
+              input: true,
+              required: false,
+              defaultValue: 'customer',
             } 
         }
     },

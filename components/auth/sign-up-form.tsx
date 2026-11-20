@@ -6,19 +6,30 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 import { SignUpData } from "@/app/(auth)/sign-up/page"
+import {
+  isUserRole,
+  ROLE_DESCRIPTIONS,
+  ROLE_LABELS,
+  USER_ROLES,
+} from "@/lib/roles"
 
 type SignUpFormProps = {
   onSubmit: (data: SignUpData) => void
 }
 
 export function SignUpForm({ onSubmit }: SignUpFormProps) {
-  // TODO: integrate real sign-up later — for now just collect the form data.
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    
-    const data = Object.fromEntries(
-      new FormData(event.currentTarget)
-    ) as unknown as SignUpData
+
+    const formData = new FormData(event.currentTarget)
+    const rawRole = formData.get("role")
+
+    const data: SignUpData = {
+      fullName: String(formData.get("fullName") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      role: isUserRole(rawRole) ? rawRole : "customer",
+    }
 
     onSubmit(data)
     console.log("Sign up form data:", data)
@@ -31,6 +42,39 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm leading-none font-medium">
+          I am signing up as
+        </legend>
+        <div className="flex flex-col gap-2 pt-2">
+          {USER_ROLES.map((role) => (
+            <label
+              key={role}
+              htmlFor={`role-${role}`}
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-input bg-background p-3 transition-colors has-[:checked]:border-[#8b1d44] has-[:checked]:bg-[#8b1d44]/5 has-[:checked]:ring-1 has-[:checked]:ring-[#8b1d44]/30 hover:border-[#8b1d44]/50"
+            >
+              <input
+                id={`role-${role}`}
+                type="radio"
+                name="role"
+                value={role}
+                defaultChecked={role === "customer"}
+                required
+                className="mt-0.5 size-4 shrink-0 accent-[#8b1d44]"
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm font-semibold">
+                  {ROLE_LABELS[role]}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {ROLE_DESCRIPTIONS[role]}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <GoogleButton onClick={handleGoogleSignUp} />
 
       <div className="relative text-center text-xs text-muted-foreground">

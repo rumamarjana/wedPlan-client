@@ -4,12 +4,14 @@ import Link from "next/link"
 import { AuthCard } from "@/components/auth/auth-card"
 import { SignUpForm } from "@/components/auth/sign-up-form"
 import { authClient } from "@/lib/auth-client"
+import { isUserRole, UserRole } from "@/lib/roles"
 // import { cookieNameRegex } from "better-auth/cookies"
 
 export type SignUpData = {
   fullName: string
   email: string
   password: string
+  role: UserRole
 }
 
 
@@ -28,6 +30,7 @@ export default function SignUpPage() {
       name: data.fullName,
       email: data.email,
       password: data.password,
+      role: isUserRole(data.role) ? data.role : "customer",
       callbackURL: "/",
     });
     if (error) {
