@@ -24,6 +24,7 @@ import {
     UsersRound,
     Wrench,
 } from "lucide-react"
+import Link from "next/link";
 
 
 const menuItemsByRole: MenuItemsByRole = {
@@ -71,7 +72,7 @@ export function Dashboardsidebar() {
                     <SidebarMenu>
                         {menuItems.map((item) => (
                             <SidebarMenuItem key={item.name}>
-                                <SidebarMenuButton render={<a href={item.url} />}>
+                                <SidebarMenuButton render={<Link href={item.url} />}>
                                     <item.icon />
                                     <span>{item.name}</span>
                                 </SidebarMenuButton>

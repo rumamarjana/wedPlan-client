@@ -17,10 +17,6 @@ import {
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Browse Services", href: "/browse-services" },
-]
 
 function Logo({ className }: { className?: string }) {
   return (
@@ -71,6 +67,12 @@ export function Navbar() {
 
   const { data: session } = authClient.useSession();
   console.log('user session ', session);
+
+  const navLinks = [
+  { label: "Home", href: "/" },
+  { label: "Browse Services", href: "/browse-services" },
+  { label: "Dashboard", href: `/dashboard/${session?.user.role || 'customer'}`},
+]
 
 
   return (
