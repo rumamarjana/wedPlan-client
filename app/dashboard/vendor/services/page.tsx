@@ -7,7 +7,8 @@ import { Eye, Pencil, Plus, Star, Tag, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
-import { deleteService, getServices } from "@/lib/api/services"
+import { deleteService, getServices, updateService } from "@/lib/api/services"
+import { authClient } from "@/lib/auth-client"
 import type { ServiceType } from "./new/page"
 
 type Service = ServiceType & { id: string; rating: number; reviews: number }
@@ -16,6 +17,7 @@ type ApiService = Partial<ServiceType> & {
   id?: string
   rating?: number
   reviews?: number
+  vendorId?: string
 }
 
 function Modal({
@@ -142,6 +144,9 @@ const ServicesPage = () => {
   const [services, setServices] = useState<Service[]>([])
   const [viewing, setViewing] = useState<Service | null>(null)
   const [editing, setEditing] = useState<Service | null>(null)
+  const { data: session } = authClient.useSession()
+  const token = (session as unknown as { session?: { token?: string } })?.session?.token
+  const userId = session?.user?.id
 
   useEffect(() => {
     // Show a success toast after being redirected from the Add Service page.
@@ -153,14 +158,16 @@ const ServicesPage = () => {
         description: "Your wedding service has been added successfully.",
       })
     }
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     getServices()
       .then((data) => {
         if (!Array.isArray(data)) return
         setServices(
-          data.map((item: ApiService) => ({
+          data
+            .filter((item: ApiService) => !userId || !item.vendorId || item.vendorId === userId)
+            .map((item: ApiService) => ({
             serviceName: item.serviceName ?? "",
             category: item.category ?? "",
             description: item.description ?? "",
@@ -184,19 +191,25 @@ const ServicesPage = () => {
   const handleDelete = async (service: Service) => {
     setServices((current) => current.filter((item) => item.id !== service.id))
     try {
-      await deleteService(service.id)
+      await deleteService(service.id, token)
     } catch (error) {
       console.error("Failed to delete service:", error)
     }
   }
 
-  const handleSave = (event: React.FormEvent) => {
+  const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!editing) return
-    setServices((current) =>
-      current.map((item) => (item.id === editing.id ? editing : item))
-    )
-    setEditing(null)
+    try {
+      await updateService(editing.id, editing, token)
+      setServices((current) =>
+        current.map((item) => (item.id === editing.id ? editing : item))
+      )
+      setEditing(null)
+      toast.add({ type: "success", title: "Service updated", description: "Your changes have been saved." })
+    } catch (error) {
+      toast.add({ type: "error", title: "Update failed", description: error instanceof Error ? error.message : "Please try again." })
+    }
   }
 
   return (

@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { getservices } from "@/lib/api/services"
 import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
 
 export type ServiceType = {
     serviceName: string
@@ -65,6 +66,7 @@ const NewServicePage = () => {
     const [submitted, setSubmitted] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const router = useRouter() ;    
+    const { data: session } = authClient.useSession()
 
     const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }))
@@ -82,7 +84,8 @@ const NewServicePage = () => {
         console.log("New service:", data)
 
         try {
-            const res = await getservices(data)
+            const token = (session as unknown as { session?: { token?: string } })?.session?.token
+            const res = await getservices(data, token)
             console.log("Response from API:", res)
             setSubmitted(true)
 
