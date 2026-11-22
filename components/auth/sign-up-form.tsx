@@ -12,6 +12,7 @@ import {
   ROLE_LABELS,
   USER_ROLES,
 } from "@/lib/roles"
+import { authClient } from "@/lib/auth-client"
 
 type SignUpFormProps = {
   onSubmit: (data: SignUpData) => void
@@ -36,8 +37,7 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
   }
 
   function handleGoogleSignUp() {
-    // TODO: integrate Google OAuth later.
-    console.log("Continue with Google (sign up) — not implemented yet")
+    void authClient.signIn.social({ provider: "google", callbackURL: "/" })
   }
 
   return (

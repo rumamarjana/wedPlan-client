@@ -7,6 +7,7 @@ import { authClient } from "@/lib/auth-client"
 import { isUserRole, UserRole } from "@/lib/roles"
 // import { cookieNameRegex } from "better-auth/cookies"
 import {useRouter} from "next/navigation"
+import { toast } from "@/components/ui/toast"
 export type SignUpData = {
   fullName: string
   email: string
@@ -35,9 +36,11 @@ const router = useRouter();
     });
     if (error) {
       console.log("Signup Error:", error)
+      toast.add({ type: "error", title: "Sign up failed", description: error.message || "Please check your details." })
       return
     }
     console.log("Sign up response:", signUpResponse);
+    toast.add({ type: "success", title: "Account created", description: "Welcome to WedPlan." })
     if(!error){
       router.push("/");
     }

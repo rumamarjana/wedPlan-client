@@ -6,7 +6,8 @@ import { GoogleButton } from "@/components/auth/google-button"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SignInData } from "@/app/(auth)/sign-in/page"
+import type { SignInData } from "@/app/(auth)/sign-in/page"
+import { authClient } from "@/lib/auth-client"
 
 type SignInFormProps = {
   onSubmit: (data: SignInData) => Promise<void>
@@ -14,21 +15,18 @@ type SignInFormProps = {
 
 
 
-export function SignInForm({onSubmit }: SignInFormProps) {
-  // TODO: integrate real sign-in later — for now just collect the form data.
+export function SignInForm({ onSubmit }: SignInFormProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-      const data = Object.fromEntries(
-         new FormData(event.currentTarget)
-       ) as unknown as SignInData
-   
-       onSubmit(data)
-    console.log("Sign in form data:", data)
+    const data = Object.fromEntries(
+      new FormData(event.currentTarget)
+    ) as unknown as SignInData
+
+    onSubmit(data)
   }
 
   function handleGoogleSignIn() {
-    // TODO: integrate Google OAuth later.
-    console.log("Continue with Google (sign in) — not implemented yet")
+    void authClient.signIn.social({ provider: "google", callbackURL: window.location.href })
   }
 
   return (

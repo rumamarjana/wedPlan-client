@@ -1,50 +1,40 @@
-'use client'
+"use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { AuthCard } from "@/components/auth/auth-card"
 import { SignInForm } from "@/components/auth/sign-in-form"
-import { authClient } from "@/lib/auth-client";
-import {useRouter} from "next/navigation"
-// export const metadata = {
-//   title: "Sign In — WedPlan",
-//   description: "Sign in to your WedPlan account.",
-// }
+import { authClient } from "@/lib/auth-client"
+import { toast } from "@/components/ui/toast"
+
 export type SignInData = {
   email: string
   password: string
 }
 
 export default function SignInPage() {
+  const router = useRouter()
 
-const router = useRouter();
   const handleSignIn = async (data: SignInData) => {
-    const { data: signInResponse, error } = await authClient.signIn.email({
+    // Read the URL when the form is submitted so the page can stay static.
+    const redirectTo =
+      new URLSearchParams(window.location.search).get("redirectTo") || "/"
+
+    const { error } = await authClient.signIn.email({
       email: data.email,
       password: data.password,
       rememberMe: true,
-      callbackURL: "/",
-    });
-     if (error) {
-      console.log("Sign in Error:", error)
+    })
+
+    if (error) {
+      console.error("Sign in error:", error)
+      toast.add({ type: "error", title: "Sign in failed", description: error.message || "Check your email and password." })
       return
     }
-    console.log("Sign in response:", signInResponse);
-     if(!error){
-      router.push("/");
-    }
+    toast.add({ type: "success", title: "Welcome back", description: "You have signed in successfully." })
+    router.push(redirectTo)
   }
-
-
-
-
-
-
-
-
-
-
-
 
   return (
     <AuthCard
