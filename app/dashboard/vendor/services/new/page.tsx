@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { Plus } from "lucide-react"
-
+import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +17,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { getservices } from "@/lib/api/services"
+import { useRouter } from "next/navigation"
 
 export type ServiceType = {
     serviceName: string
@@ -31,7 +32,7 @@ export type ServiceType = {
     active: boolean
     location: string
 }
- export const initialForm = {
+export const initialForm = {
     serviceName: "",
     category: "",
     description: "",
@@ -63,6 +64,7 @@ const NewServicePage = () => {
     const [form, setForm] = useState(initialForm)
     const [submitted, setSubmitted] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const router = useRouter() ;    
 
     const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }))
@@ -71,19 +73,23 @@ const NewServicePage = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-         const data = {
-         ...form,
+        const data = {
+            ...form,
             features: form.features.split(",").map((feature) =>
                 feature.trim()).filter(Boolean),
         }
-      
+
         console.log("New service:", data)
         setSubmitted(true)
 
-        const res = await getservices (data);
+        const res = await getservices(data);
         console.log("Response from API:", res);
     }
-
+    toast.add({
+        title: "Service Created Successfully!",
+        description: "Your wedding service has been added successfully.",
+    })
+    router.push("/dashboard/vendor/services")
     const handleCancel = () => {
         setForm(initialForm)
         setSubmitted(false)

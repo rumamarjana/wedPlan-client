@@ -1,87 +1,68 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Eye, Pencil, Plus, Star, Tag, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { deleteService, getServices } from "@/lib/api/services"
 import type { ServiceType } from "./new/page"
 
-type Service = ServiceType & { rating: number; reviews: number }
+type Service = ServiceType & { id: string; rating: number; reviews: number }
+type ApiService = Partial<ServiceType> & {
+  _id?: string
+  id?: string
+  rating?: number
+  reviews?: number
+}
 
-const services: Service[] = [
-  {
-    serviceName: "Wedding Decoration",
-    category: "Wedding Decoration",
-    description:
-      "Floral mandap and stage setup with fresh flowers and drapery.",
-    basePrice: "25,000",
-    duration: "2",
-    durationUnit: "days",
-    images: [
-      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
-    ],
-    packageType: "Premium",
-    features: ["Floral mandap", "Stage backdrop", "Guest seating"],
-    active: true,
-    location: "Dhaka",
-    rating: 4.9,
-    reviews: 124,
-  },
-  {
-    serviceName: "Outdoor Stage Lighting",
-    category: "Wedding Decoration",
-    description: "String lights and spotlights for a magical outdoor evening.",
-    basePrice: "15,000",
-    duration: "1",
-    durationUnit: "days",
-    images: [
-      "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&q=80",
-    ],
-    packageType: "Basic",
-    features: ["String lights", "Spotlights"],
-    active: true,
-    location: "Chattogram",
-    rating: 4.8,
-    reviews: 80,
-  },
-  {
-    serviceName: "Traditional Gate Design",
-    category: "Wedding Decoration",
-    description: "Decorated entrance gate with marigold garlands and drapes.",
-    basePrice: "8,000",
-    duration: "1",
-    durationUnit: "days",
-    images: [
-      "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&q=80",
-    ],
-    packageType: "Deluxe",
-    features: ["Marigold garlands", "Fabric draping"],
-    active: true,
-    location: "Dhaka",
-    rating: 4.7,
-    reviews: 45,
-  },
-  {
-    serviceName: "Indoor Canopy Setup",
-    category: "Wedding Decoration",
-    description: "Canopy and ceiling decor for intimate indoor ceremonies.",
-    basePrice: "12,000",
-    duration: "1",
-    durationUnit: "days",
-    images: [
-      "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80",
-    ],
-    packageType: "Basic",
-    features: ["Canopy frame", "Ceiling florals"],
-    active: false,
-    location: "Sylhet",
-    rating: 4.6,
-    reviews: 32,
-  },
-]
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string
+  onClose: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-rose-950">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-2xl leading-none text-rose-900/60"
+          >
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
 
-function ServiceCard({ service }: { service: Service }) {
+function ServiceCard({
+  service,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  service: Service
+  onView: (service: Service) => void
+  onEdit: (service: Service) => void
+  onDelete: (service: Service) => void
+}) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
       <div className="relative aspect-[16/10] bg-rose-100">
@@ -126,16 +107,27 @@ function ServiceCard({ service }: { service: Service }) {
         </p>
 
         <div className="mt-auto flex gap-2 border-t border-rose-100 pt-3">
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onView(service)}
+          >
             <Eye /> View Details
           </Button>
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onEdit(service)}
+          >
             <Pencil /> Edit
           </Button>
           <Button
             size="sm"
             variant="destructive"
             className="flex-1 bg-rose-100 text-rose-900 hover:bg-rose-200"
+            onClick={() => onDelete(service)}
           >
             <Trash2 /> Delete
           </Button>
@@ -146,6 +138,54 @@ function ServiceCard({ service }: { service: Service }) {
 }
 
 const ServicesPage = () => {
+  const [services, setServices] = useState<Service[]>([])
+  const [viewing, setViewing] = useState<Service | null>(null)
+  const [editing, setEditing] = useState<Service | null>(null)
+
+  useEffect(() => {
+    getServices()
+      .then((data) => {
+        if (!Array.isArray(data)) return
+        setServices(
+          data.map((item: ApiService) => ({
+            serviceName: item.serviceName ?? "",
+            category: item.category ?? "",
+            description: item.description ?? "",
+            basePrice: item.basePrice ?? "0",
+            duration: item.duration ?? "1",
+            durationUnit: item.durationUnit ?? "days",
+            images: item.images ?? [],
+            packageType: item.packageType ?? "basic",
+            features: item.features ?? [],
+            active: item.active ?? true,
+            location: item.location ?? "",
+            id: item._id ?? item.id ?? "",
+            rating: item.rating ?? 0,
+            reviews: item.reviews ?? 0,
+          }))
+        )
+      })
+      .catch((error) => console.error("Failed to load services:", error))
+  }, [])
+
+  const handleDelete = async (service: Service) => {
+    setServices((current) => current.filter((item) => item.id !== service.id))
+    try {
+      await deleteService(service.id)
+    } catch (error) {
+      console.error("Failed to delete service:", error)
+    }
+  }
+
+  const handleSave = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!editing) return
+    setServices((current) =>
+      current.map((item) => (item.id === editing.id ? editing : item))
+    )
+    setEditing(null)
+  }
+
   return (
     <div className="min-h-full bg-[#fdf2f4] p-5 sm:p-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -163,11 +203,142 @@ const ServicesPage = () => {
         </Button>
       </div>
 
+      {services.length === 0 && (
+        <p className="text-sm text-rose-900/60">No services found.</p>
+      )}
+
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {services.map((service) => (
-          <ServiceCard key={service.serviceName} service={service} />
+          <ServiceCard
+            key={service.id}
+            service={service}
+            onView={setViewing}
+            onEdit={setEditing}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
+
+      {viewing && (
+        <Modal title={viewing.serviceName} onClose={() => setViewing(null)}>
+          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-rose-100">
+            <Image
+              src={viewing.images[0] ?? "/hero-couple.jpg"}
+              alt={viewing.serviceName}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </div>
+          <div className="mt-4 space-y-2 text-sm text-rose-900/80">
+            <p className="text-xl font-semibold text-rose-950">
+              ₹ {viewing.basePrice}+
+            </p>
+            <p className="flex items-center gap-1">
+              <Tag className="size-4" /> {viewing.category} · {viewing.location}
+            </p>
+            <p className="flex items-center gap-1">
+              <Star className="size-4 fill-amber-400 text-amber-400" />
+              {viewing.rating} ({viewing.reviews} reviews)
+            </p>
+            <p>{viewing.description}</p>
+            <p className="text-rose-900/60">
+              {viewing.duration} {viewing.durationUnit} · {viewing.packageType}{" "}
+              package · {viewing.active ? "Active" : "Draft"}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {viewing.features.map((feature) => (
+                <span
+                  key={feature}
+                  className="rounded-lg bg-rose-50 px-2 py-1 text-xs text-rose-800"
+                >
+                  {feature}
+                </span>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {editing && (
+        <Modal title="Edit Service" onClose={() => setEditing(null)}>
+          <form onSubmit={handleSave} className="space-y-3">
+            <label className="block text-sm">
+              Service Name
+              <input
+                className="mt-1 w-full rounded-lg border p-2"
+                value={editing.serviceName}
+                onChange={(event) =>
+                  setEditing({ ...editing, serviceName: event.target.value })
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              Category
+              <input
+                className="mt-1 w-full rounded-lg border p-2"
+                value={editing.category}
+                onChange={(event) =>
+                  setEditing({ ...editing, category: event.target.value })
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              Price (₹)
+              <input
+                className="mt-1 w-full rounded-lg border p-2"
+                value={editing.basePrice}
+                onChange={(event) =>
+                  setEditing({ ...editing, basePrice: event.target.value })
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              Location
+              <input
+                className="mt-1 w-full rounded-lg border p-2"
+                value={editing.location}
+                onChange={(event) =>
+                  setEditing({ ...editing, location: event.target.value })
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              Description
+              <textarea
+                className="mt-1 w-full rounded-lg border p-2"
+                rows={3}
+                value={editing.description}
+                onChange={(event) =>
+                  setEditing({ ...editing, description: event.target.value })
+                }
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editing.active}
+                onChange={(event) =>
+                  setEditing({ ...editing, active: event.target.checked })
+                }
+              />
+              Active
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditing(null)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-rose-900 hover:bg-rose-950">
+                Save
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }
