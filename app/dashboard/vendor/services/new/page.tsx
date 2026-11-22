@@ -80,16 +80,25 @@ const NewServicePage = () => {
         }
 
         console.log("New service:", data)
-        setSubmitted(true)
 
-        const res = await getservices(data);
-        console.log("Response from API:", res);
+        try {
+            const res = await getservices(data)
+            console.log("Response from API:", res)
+            setSubmitted(true)
+
+            // Let the services page know to show the success toast after redirect.
+            sessionStorage.setItem("serviceAdded", "true")
+            router.push("/dashboard/vendor/services")
+        } catch (error) {
+            console.error("Failed to add service:", error)
+            toast.add({
+                type: "error",
+                title: "Could not add service",
+                description: "Something went wrong. Please try again.",
+            })
+        }
     }
-    toast.add({
-        title: "Service Created Successfully!",
-        description: "Your wedding service has been added successfully.",
-    })
-    router.push("/dashboard/vendor/services")
+
     const handleCancel = () => {
         setForm(initialForm)
         setSubmitted(false)

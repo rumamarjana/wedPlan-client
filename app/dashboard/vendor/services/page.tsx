@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Eye, Pencil, Plus, Star, Tag, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 import { deleteService, getServices } from "@/lib/api/services"
 import type { ServiceType } from "./new/page"
 
@@ -141,6 +142,18 @@ const ServicesPage = () => {
   const [services, setServices] = useState<Service[]>([])
   const [viewing, setViewing] = useState<Service | null>(null)
   const [editing, setEditing] = useState<Service | null>(null)
+
+  useEffect(() => {
+    // Show a success toast after being redirected from the Add Service page.
+    if (sessionStorage.getItem("serviceAdded") === "true") {
+      sessionStorage.removeItem("serviceAdded")
+      toast.add({
+        type: "success",
+        title: "Service Added Successfully!",
+        description: "Your wedding service has been added successfully.",
+      })
+    }
+  }, [])
 
   useEffect(() => {
     getServices()
