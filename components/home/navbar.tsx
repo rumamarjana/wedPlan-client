@@ -165,27 +165,17 @@ export function Navbar() {
                 ))}
 
                 <div className="mt-3 flex flex-col gap-2 border-t pt-4">
-                  <SheetClose
-                    render={
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        render={<Link href="/sign-in" />}
-                      />
-                    }
-                  >
-                    Sign In
-                  </SheetClose>
-                  <SheetClose
-                    render={
-                      <Button
-                        className="w-full"
-                        render={<Link href="/sign-up" />}
-                      />
-                    }
-                  >
-                    Sign Up
-                  </SheetClose>
+                  {session?.user ? (
+                    <>
+                      <p className="px-2 text-sm font-medium">Welcome, {session.user.name}</p>
+                      <SheetClose render={<Button variant="outline" className="w-full" onClick={() => void authClient.signOut()} />}>Sign Out</SheetClose>
+                    </>
+                  ) : (
+                    <>
+                      <SheetClose render={<Button variant="outline" className="w-full" render={<Link href="/sign-in" />} />}>Sign In</SheetClose>
+                      <SheetClose render={<Button className="w-full" render={<Link href="/sign-up" />} />}>Sign Up</SheetClose>
+                    </>
+                  )}
 
 
 
