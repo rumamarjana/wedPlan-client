@@ -1,11 +1,11 @@
 "use client"
 import { useEffect, useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { useApiToken } from "@/lib/api/auth-token"
 import { API_BASE_URL } from "@/lib/api/client"
 import { toast } from "@/components/ui/toast"
 type User={id:string;name:string;email:string;role:string;isBlocked:boolean}
 export default function AdminUsersPage(){
- const {data:session}=authClient.useSession();const token=(session as unknown as {session?:{token?:string}})?.session?.token
+ const {token}=useApiToken()
  const [users,setUsers]=useState<User[]>([]);const [search,setSearch]=useState("");const [role,setRole]=useState("")
  async function load(){if(!token)return;const query=new URLSearchParams();if(search)query.set("search",search);if(role)query.set("role",role);const r=await fetch(`${API_BASE_URL}/admin/users?${query}`,{headers:{Authorization:`Bearer ${token}`}});const d=await r.json();setUsers(Array.isArray(d)?d:[])}
  useEffect(()=>{load()},[token,role])

@@ -1,10 +1,10 @@
 "use client"
 import { useEffect, useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { useApiToken } from "@/lib/api/auth-token"
 import { API_BASE_URL } from "@/lib/api/client"
 import { toast } from "@/components/ui/toast"
 export default function ProfilePage(){
- const {data:session}=authClient.useSession(); const token=(session as unknown as {session?:{token?:string}})?.session?.token
+ const {token,session}=useApiToken()
  const [name,setName]=useState(""); const [businessName,setBusinessName]=useState(""); const [image,setImage]=useState("")
  useEffect(()=>{setName(session?.user?.name||""); if(!token)return;fetch(`${API_BASE_URL}/users/me`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(d=>{setBusinessName(d.user?.businessName||"");setImage(d.user?.image||"")})},[session,token])
  async function save(e:React.FormEvent){e.preventDefault();const r=await fetch(`${API_BASE_URL}/users/me`,{method:"PATCH",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({name,businessName,image})});const d=await r.json().catch(()=>({}));if(!r.ok){toast.add({type:"error",title:"Profile update failed",description:d.message});return}toast.add({type:"success",title:"Profile updated"})}

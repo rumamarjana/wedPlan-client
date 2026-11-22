@@ -4,10 +4,10 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRightIcon, HeartIcon } from "lucide-react"
 
-import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/toast"
-import { API_BASE_URL } from "@/lib/api/client"
+import { createBooking } from "@/lib/api/services"
+import { useApiToken } from "@/lib/api/auth-token"
 
 export function BookingBar({
   serviceName,
@@ -17,8 +17,9 @@ export function BookingBar({
   serviceId: string
 }) {
   const [isFavorite, setIsFavorite] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
-  const { data: session } = authClient.useSession()
+  const { token, session } = useApiToken()
 
   async function handleBooking() {
     if (!session?.user) {
@@ -26,23 +27,45 @@ export function BookingBar({
       router.push(`/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`)
       return
     }
+
+    if (!token) {
+      toast.add({
+        type: "error",
+        title: "Please try again in a moment",
+        description: "We are still setting up your session.",
+      })
+      return
+    }
+
     const eventDate = window.prompt("Event date (YYYY-MM-DD)")
     if (!eventDate) return
     const eventLocation = window.prompt("Event location")
     if (!eventLocation) return
     const message = window.prompt("Additional message") || ""
-    const token = (session as unknown as { session?: { token?: string } })?.session?.token
-    const response = await fetch(`${API_BASE_URL}/bookings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ serviceId, eventDate, eventLocation, message }),
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      toast.add({ type: "error", title: "Booking failed", description: data.message || "Please try again." })
-      return
+
+    setSubmitting(true)
+    try {
+      await createBooking(
+        { serviceId, eventDate, eventLocation, message },
+        token
+      )
+      toast.add({
+        type: "success",
+        title: "Booking request sent",
+        description: "The vendor can now review your request.",
+      })
+    } catch (error) {
+      toast.add({
+        type: "error",
+        title: "Booking failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Could not reach the server. Please try again.",
+      })
+    } finally {
+      setSubmitting(false)
     }
-    toast.add({ type: "success", title: "Booking request sent", description: "The vendor can now review your request." })
   }
 
   return (
@@ -51,10 +74,11 @@ export function BookingBar({
         <button
           type="button"
           onClick={handleBooking}
+          disabled={submitting}
           aria-label={`Book ${serviceName}`}
-          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-rose-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-rose-950"
+          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-rose-900 px-6 text-sm font-semibold text-white transition-colors hover:bg-rose-950 disabled:opacity-60"
         >
-          Book This Service
+          {submitting ? "Sending request..." : "Book This Service"}
           <ArrowRightIcon className="size-4" />
         </button>
 

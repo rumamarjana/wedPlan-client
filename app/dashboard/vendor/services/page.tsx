@@ -8,7 +8,7 @@ import { Eye, Pencil, Plus, Star, Tag, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/toast"
 import { deleteService, getServices, updateService } from "@/lib/api/services"
-import { authClient } from "@/lib/auth-client"
+import { useApiToken } from "@/lib/api/auth-token"
 import type { ServiceType } from "./new/page"
 
 type Service = ServiceType & { id: string; rating: number; reviews: number }
@@ -144,8 +144,7 @@ const ServicesPage = () => {
   const [services, setServices] = useState<Service[]>([])
   const [viewing, setViewing] = useState<Service | null>(null)
   const [editing, setEditing] = useState<Service | null>(null)
-  const { data: session } = authClient.useSession()
-  const token = (session as unknown as { session?: { token?: string } })?.session?.token
+  const { token, session } = useApiToken()
   const userId = session?.user?.id
 
   useEffect(() => {

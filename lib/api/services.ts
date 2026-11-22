@@ -1,10 +1,39 @@
 import type { ServiceType } from "@/app/dashboard/vendor/services/new/page"
+import { apiRequest } from "@/lib/api/client"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
 export type ApiService = ServiceType & {
   _id?: string
   id?: string
+}
+
+export type BookingStatus = "Pending" | "Accepted" | "Rejected" | "Cancelled"
+
+export type ApiBooking = {
+  _id: string
+  serviceId: string
+  vendorId?: string
+  customerId?: string
+  eventDate: string
+  eventLocation: string
+  message?: string
+  status: BookingStatus
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type CreateBookingInput = {
+  serviceId: string
+  eventDate: string
+  eventLocation: string
+  message?: string
+}
+
+type BookingResponse = {
+  success?: boolean
+  booking?: ApiBooking
+  message?: string
 }
 
 export const getservices = async (data: ServiceType, token?: string) => {
@@ -28,20 +57,11 @@ export const getServices = async (query = ""): Promise<ApiService[]> => {
   return Array.isArray(data) ? (data as ApiService[]) : []
 }
 
-// export const getServiceById = async (id: string): Promise<ApiService | null> => {
-//   const res = await fetch(`${BASE_URL}/services/${encodeURIComponent(id)}`)
-
-//   if (res.status === 404 || res.status === 400) return null
-//   if (!res.ok) throw new Error(`Failed to load service (${res.status})`)
-
-//   const data: unknown = await res.json()
-//   return data && typeof data === "object" ? (data as ApiService) : null
-// }
 export const getServiceById = async (
   id: string
 ): Promise<ApiService | null> => {
   try {
-    const res = await fetch(`${BASE_URL}/services/${id}`)
+    const res = await fetch(`${BASE_URL}/services/${encodeURIComponent(id)}`)
 
     if (res.status === 404 || res.status === 400) {
       return null
@@ -79,3 +99,52 @@ export const updateService = async (id: string, data: Partial<ServiceType>, toke
   if (!res.ok) throw new Error(`Failed to update service (${res.status})`)
   return res.json()
 }
+
+// ---------------------------------------------------------------------------
+// Bookings
+//
+// The Express API returns `{ success, message, booking }` for writes and a
+// plain array for `GET /bookings/my`. `apiRequest` handles the token header,
+// JSON parsing and server error messages so callers only deal with the data.
+// ---------------------------------------------------------------------------
+
+export const createBooking = async (
+  data: CreateBookingInput,
+  token?: string
+): Promise<ApiBooking> => {
+  const result = await apiRequest<BookingResponse>(
+    "/bookings",
+    { method: "POST", body: JSON.stringify(data) },
+    token
+  )
+
+  if (!result.booking) {
+    throw new Error(result.message || "Booking could not be created")
+  }
+  return result.booking
+}
+
+export const getMyBookings = async (token?: string): Promise<ApiBooking[]> => {
+  const data = await apiRequest<unknown>("/bookings/my", {}, token)
+  return Array.isArray(data) ? (data as ApiBooking[]) : []
+}
+
+export const updateBookingStatus = async (
+  id: string,
+  status: BookingStatus,
+  token?: string
+): Promise<ApiBooking> => {
+  const result = await apiRequest<BookingResponse>(
+    `/bookings/${encodeURIComponent(id)}/status`,
+    { method: "PATCH", body: JSON.stringify({ status }) },
+    token
+  )
+
+  if (!result.booking) {
+    throw new Error(result.message || "Booking could not be updated")
+  }
+  return result.booking
+}
+
+export const cancelBooking = (id: string, token?: string) =>
+  updateBookingStatus(id, "Cancelled", token)

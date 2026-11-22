@@ -1,11 +1,11 @@
 "use client"
 import { useEffect, useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { useApiToken } from "@/lib/api/auth-token"
 import { API_BASE_URL } from "@/lib/api/client"
 import { toast } from "@/components/ui/toast"
 type Service={_id:string;serviceName:string;category:string;status:string;active:boolean}
 export default function AdminServicesPage(){
- const {data:session}=authClient.useSession();const token=(session as unknown as {session?:{token?:string}})?.session?.token
+ const {token}=useApiToken()
  const [items,setItems]=useState<Service[]>([]);const [search,setSearch]=useState("")
  async function load(){if(!token)return;const r=await fetch(`${API_BASE_URL}/services?search=${encodeURIComponent(search)}`,{headers:{Authorization:`Bearer ${token}`}});const d=await r.json();setItems(Array.isArray(d)?d:[])}
  useEffect(()=>{load()},[token])
