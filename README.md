@@ -43,9 +43,17 @@ The client runs at `http://localhost:3000`.
 
 See `.env.example`. Required values include the API URL, Better Auth URL/database/secret, trusted origins, Google OAuth credentials, and ImgBB key.
 
-## Deployment
+## Deployment (Vercel)
 
-Set all environment variables in the hosting provider. `NEXT_PUBLIC_API_BASE_URL` must point to the deployed Express API and `BETTER_AUTH_URL` must point to the deployed client origin.
+Set these project environment variables in Vercel:
+
+- `NEXT_PUBLIC_API_BASE_URL` — the deployed Express API origin (for example `https://wed-plan-server-inky.vercel.app`).
+- `BETTER_AUTH_DB_URL` and `BETTER_AUTH_SECRET` — the shared MongoDB connection string and auth secret.
+- `BETTER_AUTH_TRUSTED_ORIGINS` — the deployed client origin(s), comma-separated, when different from the Vercel deployment URL.
+
+`NEXT_PUBLIC_BETTER_AUTH_URL` and `BETTER_AUTH_URL` can stay at their localhost defaults: the browser client calls the current page origin at runtime and the server falls back to Vercel's built-in `VERCEL_URL`. If you set `BETTER_AUTH_URL`, use the **deployed client origin** (never `localhost`) — otherwise Better Auth rejects the request `Origin` and sign-in/sign-up fail.
+
+For Google sign-in, add `https://<your-client-domain>/api/auth/callback/google` to the OAuth client's authorized redirect URIs.
 
 Live website: Add the production URL here.
 
