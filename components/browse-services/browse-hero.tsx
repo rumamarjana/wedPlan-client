@@ -7,15 +7,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CATEGORY_OPTIONS } from "./constants"
 import { SelectField } from "./select-field"
+import { useFilterParams } from "./use-filter-params"
 
 export function BrowseHero() {
+  const { searchParams, setParam, setParams } = useFilterParams()
+
+  const search = searchParams.get("search") ?? ""
+  const category = searchParams.get("category") ?? ""
+
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    // Search handler will be wired up later.
-  }
+    const form = new FormData(event.currentTarget)
 
-  function handleCategoryChange() {
-    // Category filter handler will be wired up later.
+    setParams({
+      search: String(form.get("search") ?? "").trim(),
+      category: String(form.get("category") ?? ""),
+    })
   }
 
   return (
@@ -43,8 +50,10 @@ export function BrowseHero() {
               className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-rose-400"
             />
             <Input
+              key={search}
               type="search"
               name="search"
+              defaultValue={search}
               aria-label="Search services"
               placeholder="Search services..."
               className="h-10 rounded-full border-rose-200 bg-white pr-3 pl-9"
@@ -53,9 +62,11 @@ export function BrowseHero() {
 
           <SelectField
             ariaLabel="Search category"
+            name="category"
             options={CATEGORY_OPTIONS}
+            value={category}
             placeholder="All Categories"
-            onChange={handleCategoryChange}
+            onChange={(value) => setParam("category", value)}
             className="sm:w-52"
           />
 

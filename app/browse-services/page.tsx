@@ -3,7 +3,15 @@ import {
   FilterSidebar,
   ServiceResults,
 } from "@/components/browse-services"
+import { parsePrice } from "@/components/browse-services/constants"
 import { getServices, type ApiService } from "@/lib/api/services"
+
+// The API does not filter on benefits or price, so those are applied here.
+const BENEFIT_PATTERNS: Record<string, RegExp> = {
+  consultation: /consult/i,
+  custom: /custom/i,
+  onsite: /on[\s-]?site/i,
+}
 
 const BrowseServicesPage = async ({
   searchParams,
@@ -17,8 +25,8 @@ const BrowseServicesPage = async ({
 
   Object.entries(search).forEach(([key, value]) => {
     if (Array.isArray(value)) {
-      value.forEach((item) => urlSearch.append(key, item))
-    } else if (value !== undefined) {
+      value.filter(Boolean).forEach((item) => urlSearch.append(key, item))
+    } else if (value) {
       urlSearch.set(key, value)
     }
   })
@@ -29,7 +37,26 @@ const BrowseServicesPage = async ({
   let hasError = false
 
   try {
-    services = await getServices(query)
+    const fetched = await getServices(query)
+    const priceParam = urlSearch.get("maxPrice")
+    const maxPrice = priceParam === null ? NaN : Number(priceParam)
+    const benefit = urlSearch.get("benefits")
+    const benefitPattern = benefit ? BENEFIT_PATTERNS[benefit] : undefined
+
+    services = fetched.filter((service) => {
+      if (Number.isFinite(maxPrice) && parsePrice(service.basePrice) > maxPrice) {
+        return false
+      }
+
+      if (
+        benefitPattern &&
+        !service.features?.some((feature) => benefitPattern.test(feature))
+      ) {
+        return false
+      }
+
+      return true
+    })
   } catch (error) {
     console.error("Failed to load services:", error)
     hasError = true

@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { HeartIcon, StarIcon } from "lucide-react"
 
 import { formatPrice } from "./constants"
@@ -11,8 +12,10 @@ export function ServiceCard({ service }: { service: BrowseService }) {
     // Favorite handler will be wired up later.
   }
 
-  return (
-    <article className="overflow-hidden rounded-xl border border-rose-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+  const serviceId = service._id ?? service.id
+
+  const content = (
+    <>
       <div className="relative aspect-[4/3] bg-rose-100">
         <Image
           src={service.images?.[0] ?? "/hero-couple.jpg"}
@@ -22,14 +25,6 @@ export function ServiceCard({ service }: { service: BrowseService }) {
           sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
           className="object-cover"
         />
-        <button
-          type="button"
-          onClick={handleFavorite}
-          aria-label="Save service"
-          className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-white/90 text-rose-500 shadow-sm transition-colors hover:bg-white hover:text-rose-600"
-        >
-          <HeartIcon className="size-4" />
-        </button>
       </div>
 
       <div className="p-3">
@@ -46,6 +41,27 @@ export function ServiceCard({ service }: { service: BrowseService }) {
           </span>
         </div>
       </div>
+    </>
+  )
+
+  return (
+    <article className="relative overflow-hidden rounded-xl border border-rose-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+      {serviceId ? (
+        <Link href={`/browse-services/${serviceId}`} className="block">
+          {content}
+        </Link>
+      ) : (
+        content
+      )}
+
+      <button
+        type="button"
+        onClick={handleFavorite}
+        aria-label="Save service"
+        className="absolute top-2 right-2 z-10 flex size-8 items-center justify-center rounded-full bg-white/90 text-rose-500 shadow-sm transition-colors hover:bg-white hover:text-rose-600"
+      >
+        <HeartIcon className="size-4" />
+      </button>
     </article>
   )
 }

@@ -38,7 +38,11 @@ export const SORT_OPTIONS: FilterOption[] = [
 
 export const MAX_PRICE = 60_000
 
-export function formatPrice(value?: string | number): string {
+export function parsePrice(value?: string | number): number {
   const amount = Number(String(value ?? 0).replace(/,/g, ""))
-  return Number.isFinite(amount) ? amount.toLocaleString("en-US") : "0"
+  return Number.isFinite(amount) ? amount : 0
+}
+
+export function formatPrice(value?: string | number): string {
+  return parsePrice(value).toLocaleString("en-US")
 }

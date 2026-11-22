@@ -7,17 +7,19 @@ import type { FilterOption } from "./types"
 type SelectFieldProps = {
   ariaLabel: string
   options: readonly FilterOption[]
+  value: string
+  name?: string
   placeholder?: string
-  defaultValue?: string
-  onChange?: () => void
+  onChange: (value: string) => void
   className?: string
 }
 
 export function SelectField({
   ariaLabel,
   options,
+  value,
+  name,
   placeholder,
-  defaultValue = "",
   onChange,
   className = "",
 }: SelectFieldProps) {
@@ -25,8 +27,9 @@ export function SelectField({
     <div className={`relative ${className}`}>
       <select
         aria-label={ariaLabel}
-        defaultValue={defaultValue}
-        onChange={onChange}
+        name={name}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         className="h-9 w-full appearance-none rounded-full border border-rose-200 bg-white py-1.5 pr-9 pl-3.5 text-sm text-rose-900 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
       >
         {placeholder && <option value="">{placeholder}</option>}
